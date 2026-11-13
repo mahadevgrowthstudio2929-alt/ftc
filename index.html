@@ -447,7 +447,8 @@ body {
 }
 
 </style>
-   <!-- Meta Pixel Code -->
+
+<!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -464,6 +465,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=2134263227181089&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+
 </head>
 
 <body>
@@ -563,17 +565,47 @@ src="https://www.facebook.com/tr?id=2134263227181089&ev=PageView&noscript=1"
 
 <script>
 
-/* DIRECT USER-INITIATED TELEGRAM REDIRECTION */
+/*
+  LIGHTWEIGHT CTA SAFETY LAYER
+  - Ignores synthetic/programmatically dispatched clicks.
+  - Prevents rapid repeated CTA activations in the same page load.
+  - Does NOT modify Meta Pixel or fire any additional Pixel events.
+*/
 
 const joinButton = document.getElementById("joinButton");
+let joinActionStarted = false;
 
-joinButton.addEventListener("click", function() {
+joinButton.addEventListener("click", function(event) {
 
+    // Accept only a genuine browser-generated user interaction.
+    if (!event.isTrusted) {
+        event.preventDefault();
+        return;
+    }
+
+    // Stop duplicate / rapid repeated activations.
+    if (joinActionStarted) {
+        event.preventDefault();
+        return;
+    }
+
+    joinActionStarted = true;
+    joinButton.disabled = true;
+    joinButton.setAttribute("aria-disabled", "true");
+
+    // Keep the original Telegram destination and new-tab behavior unchanged.
     window.open(
         "https://t.me/+RQ0f0Rz6hZs0ZDQx",
         "_blank",
         "noopener,noreferrer"
     );
+
+    // Re-enable the button if the visitor remains on this page.
+    window.setTimeout(function() {
+        joinActionStarted = false;
+        joinButton.disabled = false;
+        joinButton.removeAttribute("aria-disabled");
+    }, 2500);
 
 });
 
